@@ -1,0 +1,88 @@
+%pip install seaborn
+
+%pip install pandas
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+invoice_purchases = pd.read_csv('InvoicePurchases12312016.csv')
+invoice_purchases.head()
+
+purchase_prices = pd.read_csv('2017PurchasePricesDec.csv')
+purchase_prices.head()
+
+beg_inv = pd.read_csv('BegInvFINAL12312016.csv')
+beg_inv.head()
+
+end_inv = pd.read_csv('EndInvFINAL12312016.csv')
+end_inv.head()
+
+sales = pd.read_csv('SalesFINAL12312016.csv')
+sales.head()
+
+#checking for missing data in each dataset
+datasets = [purchase_prices, beg_inv, end_inv, invoice_purchases,sales ]
+dataset_names = ["purchase_prices", "beg_inv", "end_inv", "invoice_purchases", "sales"]
+
+for name, data in zip(dataset_names,datasets ):
+    missing_values = data.isnull().sum()
+    non_zero_missing_values = missing_values[missing_values > 0]
+
+    if not non_zero_missing_values.empty:
+        print(f"\nMissing values in {name}:")
+        print(non_zero_missing_values)
+
+#Handling missing values for purchase prices datasets
+cols_to_check = ['Description', 'Size', 'Volume']
+for col in cols_to_check:
+    purchase_prices = purchase_prices[purchase_prices[col].notna()]
+
+#Handling missing values for end inv set
+if end_inv['Store'].nunique() == end_inv['City'].nunique():
+    city_store_mapping = end_inv[['Store', 'City']].drop_duplicates().set_index('Store').to_dict()['City']
+    end_inv['City'] = end_inv['City'].fillna(end_inv['Store'].map(city_store_mapping))
+else:
+    end_inv['City'].fillna('Unknown', inplace=True)
+
+#Handling missing values for invoice_purchases dataset
+invoice_purchases['Approval'].fillna('Pending', inplace=True)
+
+#Grouping by brand and description and summarize inventory for the beggining of the year
+beg_summary = beg_inv.groupby(['Brand', 'Description'])['onHand'].sum().sort_values(ascending=False)
+
+#Grouping by brand and description and summarize inventory for end of the year
+end_summary = end_inv.groupby(['Brand', 'Description'])['onHand'].sum().sort_values(ascending=False)
+
+#Identifying top 5 products at the begginging and end of the year
+top_5_beg = beg_summary.head(5)
+top_5_end = end_summary.head(5)
+
+#Identifying bottom 5 products at the begginging and end of the year
+bottom_5_beg = beg_summary.tail(5)
+bottom_5_end = end_summary.tail(5)
+
+print("Top 5 products at the beggining of the year:\n", top_5_beg)
+print("\nTop 5 products at the end of the year:\n", top_5_end)
+print("\nBottom 5 products at the beggining of the year:\n", bottom_5_beg)
+print("Bottom 5 products at the end of the year:\n", bottom_5_end)
+
+#Finding the best-selling products
+best_selling_products = sales.groupby(['Brand', 'Description']).agg({'SalesQuantity' : 'sum'}).sort_values(by = 'SalesQuantity')
+print(f"Best selling ten products:\n{best_selling_products}\n")
+
+#Finding the slow-selling products
+slow_selling_products = sales.groupby(['Brand', 'Description']).agg({'SalesQuantity' : 'sum'}).sort_values(by = 'SalesQuantity')
+print(f"slow selling ten products:\n{slow_selling_products}")
+
+sales['SalesDate'] = pd.to_datetime(sales['SalesDate'])
+sales_quantity_trend = sales.groupby('SalesDate').agg({'SalesQuantity' : 'sum'})
+sales_quantity_trend.plot(figsize=(12,6), title='Sales Quantity over Time', color = 'Blue')
+
+avg_price_trend = sales.groupby('SalesDate').agg({'SalesPrice' : 'mean'})
+avg_price_trend.plot(figsize=(12,6), title = 'Average Sales Price over Time', color = 'red')
+
+vendor_purchase_volume = invoice_purchases.groupby('VendorName').agg({'Quantity' : 'sum'}).sort_values(by = 'Quantity')
+print("Top 10 vendors by purchase Volume:\n",vendor_purchase_volume.head(10) )
+
