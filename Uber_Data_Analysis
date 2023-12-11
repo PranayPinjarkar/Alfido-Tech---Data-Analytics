@@ -1,0 +1,211 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data = pd.read_csv('UberDataset.csv')
+
+uber_data = data.copy()
+uber_data
+
+uber_data.info()
+
+uber_data.isnull().sum()
+
+uber_data[uber_data['PURPOSE'].isnull()]
+
+uber_data['PURPOSE'].fillna('Not Disclosed', inplace=True)
+uber_data.isnull().sum()
+
+uber_data.dropna(inplace=True)
+uber_data.isnull().sum()
+uber_data
+
+from datetime import datetime
+df = pd.DataFrame(uber_data)
+import pandas as pd
+
+def standardize_date(date_str):
+    try:
+        date_obj = pd.to_datetime(date_str, errors='raise', infer_datetime_format=True)
+    except ValueError:
+        date_obj = None
+    return date_obj.strftime('%m-%d-%y %H:%M') if date_obj is not None else None
+
+# Apply the function to the Date Column
+df['START_DATE'] = df['START_DATE'].apply(standardize_date)
+df['END_DATE'] = df['END_DATE'].apply(standardize_date)
+
+df
+
+uber_data.CATEGORY.unique()
+
+uber_data.CATEGORY.unique()
+
+# Finding the High demand Area
+uber_data['START'].value_counts()
+
+# convert date columns to datetime with inferred format and handling errors
+df['START_DATE']= pd.to_datetime(df['START_DATE'], errors='coerce')
+df['END_DATE']= pd.to_datetime(df['END_DATE'], errors='coerce')
+
+# Extract date-related features
+df['START_DAY'] = df['START_DATE'].dt.day_name()
+df['END_DAY'] = df['END_DATE'].dt.day_name()
+
+#calculate duration of the trip
+df['DURATION_MINUTES'] = (df['END_DATE'] - df['START_DATE']).dt.total_seconds()/60
+
+df
+
+# Day of tye week Analysis
+day_of_week_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+plt.figure(figsize=(10 , 6))
+sns.countplot(x='START_DAY', data=df, order=day_of_week_order)
+plt.xlabel('Day of week')
+plt.ylabel('No. of Rides')
+plt.title('Ride Trends by day of the week')
+plt.show()
+
+average_distance_travelled= df.groupby('PURPOSE')['MILES'].mean()
+average_distance_travelled
+
+average_value = df['MILES'].mean()
+
+#Compare values with the average and categories them
+above_average =df[df['MILES'] > average_value].shape[0]
+below_average =df[df['MILES'] <= average_value].shape[0]
+
+#data for the pie chart
+sizes = [above_average, below_average]
+labels = ['Above Average', 'Below Average']
+colors = ['lightblue', 'red']
+
+#Create a pie chart
+plt.pie(sizes, labels=labels, colors=colors, autopct= '%1.1f%%', startangle=150)
+plt.axis('equal')
+plt.title('Comparison of values with average')
+plt.show()
+
+plt.bar(average_distance_travelled.index, average_distance_travelled.values)
+plt.xlabel('Purpose')
+plt.ylabel('Average Miles')
+plt.title('Average Miles for different Purposes')
+plt.xticks(rotation=75)
+plt.show()
+
+#Count the occurences of each Category
+category_counts =df['PURPOSE'].value_counts()
+
+#Data for the pie chart
+sizes = category_counts.values
+labels = category_counts.index
+colors = plt.cm.Set3.colors 
+
+#Create a pie chart
+plt.figure(figsize=(14,9))
+plt.pie(sizes, colors=colors, autopct='%1.1f%%', startangle=140 )
+plt.axis('equal')
+
+#Adding white circle in the center to make it look like a donut chart
+centre_circle = plt.Circle((0,0),0.35, fc ='White')
+fig=plt.gcf()
+fig.gca().add_artist(centre_circle)
+plt.legend(labels, title='Categories', loc='best')
+plt.title('Pie chart distribution')
+plt.show()
+
+# Extract information about the month , day, amd hour
+df['Month'] = df['START_DATE'].dt.month
+df['Day'] = df['START_DATE'].dt.day
+df['Hour'] = df['START_DATE'].dt.hour
+
+# Plot the number of rides per month 
+plt.figure(figsize=(12, 6))
+sns.countplot(x='Month', data=df)
+plt.title('No. of rides per month')
+plt.xlabel('Month')
+plt.ylabel('Number of Rides')
+plt.show()
+
+# Plot the number of rides per day
+plt.figure(figsize=(12,6))
+sns.countplot(x='Day', data=df)
+plt.title('No. of rides per DAY')
+plt.xlabel('Day')
+plt.ylabel('Number of Rides')
+plt.show()
+
+#Plot the number of rides per hour 
+plt.figure(figsize=(12,6))
+sns.countplot(x='Hour', data=df)
+plt.title('No. of rides per Hour')
+plt.xlabel('Hour of the Day')
+plt.ylabel('Number of Rides')
+plt.show()
+
+#Plot the distribution of rise categories
+
+plt.figure(figsize=(10,6))
+sns.countplot(x='CATEGORY', data=df, order=df['CATEGORY'].value_counts().index)
+plt.title('Distribution of Ride Categories')
+plt.xlabel('Ride Categories')
+plt.ylabel('Number of Rides')
+plt.show()
+
+#Plot Distribution of ride purposes
+
+plt.figure(figsize=(12,6))
+sns.countplot(x='PURPOSE', data=df, order=df['PURPOSE'].value_counts().index)
+plt.title('Distribution of Ride Purposes')
+plt.xlabel('Ride Purpose')
+plt.ylabel('Number of Rides')
+plt.xticks(rotation=45)
+plt.show(
+
+#Filter out rides with a duration greater than 0
+
+positive_durations = df[df['DURATION_MINUTES'] >0]['DURATION_MINUTES']
+
+#Distribution of positive rise durations in minute
+plt.figure(figsize=(10,6))
+sns.histplot(positive_durations, bins=30, kde=True)
+plt.title('Distribution of Positive Ride Duration')
+plt.xlabel('Ride Duration in mins')
+plt.ylabel('Frequency')
+plt.xlim(0, positive_durations.max())
+plt.show()
+
+#Filter out rides with a duration greater than 0
+
+positive_durations = df[df['DURATION_MINUTES'] >0]
+
+#Scatter plot of ride duration against distannce
+plt.figure(figsize=(10,6))
+sns.scatterplot(x='MILES', y='DURATION_MINUTES', data=positive_durations)
+plt.title('Scatter plot of ride Duration vs. Distance(Positive durations only)')
+plt.xlabel('Distance (Miles)')
+plt.ylabel('Duration (Minutes)')
+plt.show()
+
+ride_purpose_counts = df['PURPOSE'].value_counts()
+
+#Plot the distributions of rise counts as per purpose
+plt.figure(figsize=(12,6))
+sns.barplot(x=ride_purpose_counts.values, y=ride_purpose_counts.index, palette='viridis' )
+plt.title('Ride counts by purpose')
+plt.xlabel('Number of Rides')
+plt.ylabel('Purpose')
+plt.show()
+
+popular_destinations = df['STOP'].value_counts().head(10)
+
+#Plot the top 10 popular destinations
+plt.figure(figsize=(12,6))
+sns.barplot(x=popular_destinations.values, y=popular_destinations.index, palette='viridis' )
+plt.title('Top 10 Popular Destinations')
+plt.xlabel('Number of Rides')
+plt.ylabel('destination')
+plt.show()
+
+
