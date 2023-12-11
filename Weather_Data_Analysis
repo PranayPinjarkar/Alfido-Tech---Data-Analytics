@@ -1,0 +1,105 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+data = pd.read_csv('Weather Data.csv')
+data
+
+wdata=data.copy()
+wdata.info()
+
+wdata.isnull().sum()
+
+wdata.describe()
+
+#Exploratory Data Analysis 
+wdata['Weather'].unique()
+
+# Finding unique wind speed values
+wdata['Wind Speed_km/h'].unique()
+
+# How many times when Weather is clear
+wdata[wdata['Weather']=='Clear']
+
+# No. of times when wind speed was exactly 4km/h
+wdata[wdata['Wind Speed_km/h']== 4]
+
+wdata.rename(columns={'Weather' : 'weather condition' , 'Rel Hum_%' : 'Humidity'}, inplace = True)
+wdata
+
+# All weather conditions counts
+wdata['weather condition'].value_counts()
+
+# Showing all records when weather condition is Fog
+wdata[wdata['weather condition'] == 'Fog']
+
+#data when weather is clear and humidity is greater than 50 or visibility is above 40
+selected_data = wdata[(wdata['weather condition'] == 'Clear') & ((wdata['Humidity'] > 50) | (wdata['Visibility_km'] > 40))]
+selected_data
+
+import plotly.offline as pyo
+pyo.init_notebook_mode(connected=True)
+
+# Data Visualization with Matplotlib (Pie Chart)
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Sample data
+wdata = pd.DataFrame({'weather condition': ['Clear','Cloudly', 'Mostly Cloudly', 'Mainly Clear','Snow','Rain','Rain Showers', 'Fog', 'Rain,Fog', 'Drizzle,Fog', 'Snow Showers']})
+
+# Calculate counts
+weather_counts = wdata['weather condition'].value_counts()
+
+# Plot Pie Chart
+plt.figure(figsize=(8, 8))
+plt.pie(weather_counts, labels=weather_counts.index, autopct='%1.1f%%', startangle=140)
+plt.title('Weather Condition Distribution')
+plt.show()
+
+# Humidity Distribution with Matplotlib (Histogram)
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(9, 7))
+plt.hist(wdata['Humidity'], bins=20, color='blue', edgecolor='black', density=True)
+plt.xlabel('Humidity')
+plt.ylabel('Frequency')
+plt.title('Humidity Distribution')
+plt.tight_layout()
+plt.show()
+
+# Tempreature Distribution
+data = pd.read_csv('Weather Data.csv')
+import seaborn as sns
+plt.figure(figsize=(9, 7))
+sns.histplot(data['Temp_C'], bins=20, color='blue')
+plt.xlabel('Tempreature Celsius')
+plt.ylabel('Frequency')
+plt.title('Tempreature Celcius Destribution')
+plt.show()
+
+#wind speed Distribution
+
+plt.figure(figsize=(9,7))
+sns.boxplot(y=data['Wind Speed_km/h'], color='red')
+plt.ylabel('wind Speed (km/h)')
+plt.title('wind speed Distribution')
+plt.tight_layout()
+plt.show()
+
+wdata=data.copy()
+
+Numerical_Data = ['Temp_C', 'Dew Point Temp_C', 'Wind Speed_km/h', 'Visibility_km', 'Press_kPa']
+correlation_matrix = data[Numerical_Data].corr()
+plt.figure(figsize=(8,6))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidth=0.5)
+plt.title('correlation Heatmap')
+plt.show()
+
+# Wind Speed Distribution
+
+import seaborn as sns
+plt.figure(figsize=(8, 6))
+sns.histplot(data['Wind Speed_km/h'], bins=20, color='Cyan', kde='True')
+plt.xlabel('Wind Speed (km/h)')
+plt.ylabel('Frequency')
+plt.title('Distribution of wind Speed')
+plt.show()
